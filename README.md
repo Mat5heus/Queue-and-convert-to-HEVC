@@ -1,5 +1,7 @@
 # HEVC Video Converter with QSV
 
+This is a personal project and comes with no warranty.
+
 ## Project Overview
 
 This is an initiative, or **Project**, designed for streamlined video file transcoding—specifically, converting all video files in a directory and its subdirectories into the High Efficiency Video Coding (HEVC) codec. By consolidating your multimedia assets under this format, you can significantly optimize storage usage by potentially reducing gigabytes of space previously occupied by less efficient codecs.
@@ -47,9 +49,9 @@ In essence, this project empowers users to transform their digital repositories 
 ### bash, zsh (or any other POSIX-compliant shell)
 This script is written primarily for Bash. However, if you prefer a different shell like Zsh, make sure it meets the requirements for the commands used.
 
-### FFmpeg and LibVA (for hardware acceleration)
+### FFmpeg
 FFmpeg is a powerful tool for handling multimedia files. To utilize video processing capabilities via VAAPI (Video Acceleration API), you must have:
-- FFmpeg installed on your system. For Ubuntu/Debian, run `sudo apt install -y ffmpeg`. For CentOS/Fedora, use `sudo yum install -y libva-utils`.
+- FFmpeg installed on your system. For Ubuntu/Debian, run `sudo apt install -y ffmpeg`.
 
 ### Gawk (GNU awk)
 Gawk is required for processing the output of certain commands and for running scripts that make heavy use of pattern matching. It can usually be installed via package managers:
@@ -58,7 +60,7 @@ Gawk is required for processing the output of certain commands and for running s
 
 ## Usage
 
-The `hevc_converter` script is a powerful tool for converting video files from various formats (default: MP4) to the high-efficiency video coding (HEVC) format (`-e mp4` or `-e your_extension`) while leveraging hardware acceleration via VAAPI devices (default: `/dev/dri/renderD128`).
+This is a powerful tool for converting video files from various formats (default: MP4) to the high-efficiency video coding (HEVC) format (`-e mp4` or `-e your_extension`) while leveraging hardware acceleration via VAAPI devices (default: `/dev/dri/renderD128`).
 
 You can customize several aspects of the conversion process through command-line options. Here's a detailed breakdown using `./main.sh`:
 
@@ -104,9 +106,8 @@ Refer to the script's configuration section (`config.sh`) for further customizat
 
 ## Additional Notes
 
-- The script will exit non-zero if it encounters unsuccessful operations (e.g., required tools missing, directory not accessible).
 - For more control and customization, modify the `utils.sh` file for additional functionality like custom metrics or extended reporting.
-- To ensure security and prevent unauthorized usage, keep this repository private unless intended for public use as a shared resource.
+- Pull requests are welcome!
 
 ## License & Contributing
 
