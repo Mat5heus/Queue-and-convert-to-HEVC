@@ -87,7 +87,11 @@ CONVERTED=0
 ERRORS=0
 TOTAL_SAVED=0
 
+# Captura o sinal de redimensionamento da janela
+trap 'resize_handler' SIGWINCH
+
 for file in "${files[@]}"; do
+    CURRENT_FILE="$file"  # Salva o arquivo atual globalmente para SIGWINCH
     CURRENT=$((CURRENT+1))
     log "DEBUG" "Iniciando processamento do arquivo: $file"
 
@@ -125,7 +129,9 @@ for file in "${files[@]}"; do
     AVG=$(calculate_avg "$ELAPSED" "$CURRENT")
     percent=$(( CURRENT * 100 / TOTAL ))
     REMAINING=$(calc "($TOTAL - $CURRENT) * $AVG")
-    update_ui "$file" "$CURRENT" "$TOTAL" "$percent" "$AVG" "$REMAINING" "$ELAPSED"
+    # update_ui "$file" "$CURRENT" "$TOTAL" "$percent" "$AVG" "$REMAINING" "$ELAPSED"
+    resize_handler "$file" "$CURRENT" "$TOTAL" "$percent" "$AVG" "$REMAINING" "$ELAPSED"
+
 
     log "INFO" "Preparando para converter via QSV: $file"
     log "DEBUG" "Parâmetros de conversão: MAX_HEIGHT=$MAX_HEIGHT, QP=$QP, AUDIO_CODEC=$AUDIO_CODEC, AUDIO_MODE=$AUDIO_MODE, BITRATE_LEVEL=$BITRATE_LEVEL, CHANNEL_LAYOUT=$CHANNEL_LAYOUT"
@@ -142,7 +148,7 @@ for file in "${files[@]}"; do
 
         log "DEBUG" "Executando comando ffmpeg para conversão via QSV..."
         ffmpeg -hwaccel qsv -hwaccel_output_format qsv -c:v h264_qsv -i "$file" \
-            -vf "vpp_qsv=denoise=10,scale_qsv=w=-1:h=$MAX_HEIGHT" \
+            -vf "vpp_qsv=denoise=10,scale_qsv=w=-1:h='min(ih,$MAX_HEIGHT)'" \
             -c:v hevc_qsv -global_quality "$QP" $AUDIO_PARAMS \
             -map 0 -map_metadata 0 -movflags +faststart "$output" 2>/dev/null
         ffmpeg_exit_code=$?
@@ -198,7 +204,8 @@ for file in "${files[@]}"; do
     percent=$(( CURRENT * 100 / TOTAL ))
     REMAINING=$(calc "($TOTAL - $CURRENT) * $AVG")
     # Chama a função de UI passando o espaço economizado
-    update_ui "$file" "$CURRENT" "$TOTAL" "$percent" "$AVG" "$REMAINING" "$ELAPSED" "$space_saved"
+    # update_ui "$file" "$CURRENT" "$TOTAL" "$percent" "$AVG" "$REMAINING" "$ELAPSED" "$space_saved"
+    resize_handler "$file" "$CURRENT" "$TOTAL" "$percent" "$AVG" "$REMAINING" "$ELAPSED"
     sleep 1
 done
 

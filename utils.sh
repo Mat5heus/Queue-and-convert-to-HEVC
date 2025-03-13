@@ -211,34 +211,141 @@ cleanup() {
 }
 
 # Atualiza a interface de terminal (TUI)
+# update_ui() {
+#     clear
+#     local file="$1" current="$2" total="$3" percent="$4" avg="$5" remaining="$6" elapsed="$7" space_saved="$8"
+#     [[ ! "$percent" =~ ^[0-9]+$ ]] && percent=0
+#     (( percent > 100 )) && percent=100
+#     local basename_file=$(basename "$file")
+#     local dirname_file=$(dirname "$file")
+
+#     # Conversão de espaço economizado de KB para MB
+#     local space_saved_mb=$((space_saved / 1024))
+#     local total_saved_mb=$((TOTAL_SAVED / 1024)) # Total acumulado de espaço economizado em MB
+
+#     echo -e "\033[1;34m==============================================="
+#     echo -e " Conversão de Vídeos para HEVC com QSV"
+#     echo -e "===============================================\033[0m"
+#     echo -e "\033[1;32mArquivo atual:\033[0m $basename_file"
+#     echo -e "\033[1;32mDiretório:\033[0m $dirname_file"
+#     echo -e "\033[1;32mProgresso:\033[0m $current de $total ($percent%)"
+#     draw_progress "$percent"
+#     echo -e "\033[1;32mTempo decorrido:\033[0m $(format_time "$elapsed")"
+#     echo -e "\033[1;32mTempo médio por arquivo:\033[0m $(format_time "$avg")"
+#     echo -e "\033[1;32mTempo restante estimado:\033[0m $(format_time "$remaining")"
+#     # Exibindo a economia total de espaço até o momento
+#     echo -e "\033[1;32mEspaço total economizado:\033[0m ${total_saved_mb}MB"
+#     [[ "$DRY_RUN" -eq 1 ]] && echo -e "\033[1;33mMODO SIMULAÇÃO (DRY-RUN) ATIVADO\033[0m"
+#     echo "---------------------------------------------------"
+#     echo -e "\033[1;33mPressione Ctrl+C para interromper\033[0m"
+# }
+
+resize_handler() {
+    update_ui "$CURRENT_FILE" "$CURRENT" "$TOTAL" "$percent" "$AVG" "$REMAINING" "$ELAPSED" "$TOTAL_SAVED"
+}
+
 update_ui() {
     clear
     local file="$1" current="$2" total="$3" percent="$4" avg="$5" remaining="$6" elapsed="$7" space_saved="$8"
     [[ ! "$percent" =~ ^[0-9]+$ ]] && percent=0
     (( percent > 100 )) && percent=100
-    local basename_file=$(basename "$file")
-    local dirname_file=$(dirname "$file")
+    local basename_file
+    basename_file=$(basename "$file")
+    local dirname_file
+    dirname_file=$(dirname "$file")
 
-    # Conversão de espaço economizado de KB para MB
-    local space_saved_mb=$((space_saved / 1024))
-    local total_saved_mb=$((TOTAL_SAVED / 1024)) # Total acumulado de espaço economizado em MB
+    # Conversão de espaço economizado (KB para MB)
+    local total_saved_mb=$((TOTAL_SAVED / 1024))
 
-    echo -e "\033[1;34m==============================================="
-    echo -e " Conversão de Vídeos para HEVC com QSV"
-    echo -e "===============================================\033[0m"
-    echo -e "\033[1;32mArquivo atual:\033[0m $basename_file"
-    echo -e "\033[1;32mDiretório:\033[0m $dirname_file"
-    echo -e "\033[1;32mProgresso:\033[0m $current de $total ($percent%)"
-    draw_progress "$percent"
-    echo -e "\033[1;32mTempo decorrido:\033[0m $(format_time "$elapsed")"
-    echo -e "\033[1;32mTempo médio por arquivo:\033[0m $(format_time "$avg")"
-    echo -e "\033[1;32mTempo restante estimado:\033[0m $(format_time "$remaining")"
-    # Exibindo a economia total de espaço até o momento
-    echo -e "\033[1;32mEspaço total economizado:\033[0m ${total_saved_mb}MB"
-    [[ "$DRY_RUN" -eq 1 ]] && echo -e "\033[1;33mMODO SIMULAÇÃO (DRY-RUN) ATIVADO\033[0m"
-    echo "---------------------------------------------------"
-    echo -e "\033[1;33mPressione Ctrl+C para interromper\033[0m"
+    # Prepara as linhas de conteúdo (interface)
+    local -a lines
+    lines+=("Conversão de Vídeos para HEVC com QSV")
+    lines+=("")  # linha em branco para espaçamento
+    lines+=("Arquivo atual: $basename_file")
+    lines+=("Diretório: $dirname_file")
+    lines+=("Progresso: $current de $total ($percent%)")
+    # Assume que draw_progress retorna uma barra de progresso em uma única linha
+    lines+=("$(draw_progress "$percent")")
+    lines+=("Tempo decorrido: $(format_time "$elapsed")")
+    lines+=("Tempo médio por arquivo: $(format_time "$avg")")
+    lines+=("Tempo restante estimado: $(format_time "$remaining")")
+    lines+=("Espaço total economizado: ${total_saved_mb}MB")
+    [[ "$DRY_RUN" -eq 1 ]] && lines+=("MODO SIMULAÇÃO (DRY-RUN) ATIVADO")
+    lines+=("Pressione Ctrl+C para interromper")
+
+    # Determina o comprimento máximo das linhas (conteúdo sem borda)
+    local max_line_length=0
+    for line in "${lines[@]}"; do
+        local len=${#line}
+        (( len > max_line_length )) && max_line_length=$len
+    done
+
+    # Define a largura interna desejada (conteúdo + espaçamento)
+    # Aqui adicionamos 4 colunas para espaçamento interno e as bordas laterais
+    local rect_width=$((max_line_length + 4))
+    
+    # Obtém a largura do terminal e ajusta se necessário
+    local term_width
+    term_width=$(tput cols)
+    if (( rect_width > term_width - 2 )); then
+        rect_width=$((term_width - 2))
+    fi
+
+    # Largura disponível para o conteúdo (dentro das bordas e espaçamentos)
+    local content_width=$((rect_width - 4))
+    
+    # Trunca as linhas que excedam o espaço disponível, adicionando "..."
+    for i in "${!lines[@]}"; do
+        if (( ${#lines[i]} > content_width )); then
+            lines[i]="${lines[i]:0:$((content_width - 3))}..."
+        fi
+    done
+
+    # Calcula a altura do retângulo (número de linhas de conteúdo + 2 para bordas superior e inferior)
+    local rect_height=$(( ${#lines[@]} + 2 ))
+    local term_height
+    term_height=$(tput lines)
+    # Calcula quantas linhas em branco imprimir para centralizar verticalmente
+    local top_margin=$(( (term_height - rect_height) / 2 ))
+    (( top_margin < 0 )) && top_margin=0
+
+    # Imprime linhas em branco para centralização vertical
+    for ((i=0; i<top_margin; i++)); do
+        echo ""
+    done
+
+    # Função auxiliar para centralizar horizontalmente uma linha dentro do terminal
+    center_line() {
+        local text="$1"
+        local text_len=${#text}
+        local pad=$(( (term_width - text_len) / 2 ))
+        printf "%*s%s\n" "$pad" "" "$text"
+    }
+
+    # Monta a linha de borda (superior e inferior)
+    local border_line="+"
+    for ((i=0; i<rect_width-2; i++)); do
+        border_line+="-"
+    done
+    border_line+="+"
+
+    # Imprime a borda superior centralizada
+    center_line "$border_line"
+
+    # Imprime cada linha de conteúdo com bordas e alinhamento centralizado
+    for line in "${lines[@]}"; do
+        local line_len=${#line}
+        local spaces=$(( content_width - line_len ))
+        local left_pad=$(( spaces / 2 ))
+        local right_pad=$(( spaces - left_pad ))
+        local formatted_line="|  $(printf "%*s%s%*s" "$left_pad" "" "$line" "$right_pad" "")  |"
+        center_line "$formatted_line"
+    done
+
+    # Imprime a borda inferior centralizada
+    center_line "$border_line"
 }
+
 
 # Valida o dispositivo VAAPI
 check_vaapi_device() {
