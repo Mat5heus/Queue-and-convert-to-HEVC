@@ -1,10 +1,34 @@
 # HEVC Video Converter with QSV
 
-## Overview
+## Project Overview
 
-This repository contains scripts and functions designed for video conversion to the HEVC format using hardware acceleration via VAAPI/QSV, a multimedia API available on Linux systems. The project includes utility scripts to manage disk space checks, command validation, progress tracking, device detection, and file processing.
+This is an initiative, or **Project**, designed for streamlined video file transcoding—specifically, converting all video files in a directory and its subdirectories into the High Efficiency Video Coding (HEVC) codec. By consolidating your multimedia assets under this format, you can significantly optimize storage usage by potentially reducing gigabytes of space previously occupied by less efficient codecs.
 
-It's a personal project to easily transcode a hole directory it's and subdiretories full of videos from any codec to HEVC. Doing so I could save some GBs of space.
+### Key Features:
+
+1. **Recursive Transcoding**: The project traverses a specified directory and its subdirectories, targeting all video files for transcoding. This ensures no file is overlooked in the quest to maximize storage efficiency.
+
+2. **HEVC Conversion**: Utilizes state-of-the-art HEVC codec for superior compression rates compared to many older standards like H.264 or AVCHD. As a result, you'll enjoy substantial space savings while maintaining excellent video quality.
+
+3. **Ease of Use**: Leveraging the simplicity and power of bash scripting, this project is built with your convenience in mind. It's designed to be straightforward to install and run on compatible systems without requiring extensive setup or configuration beyond ensuring the necessary dependencies are installed (see the 'Dependencies' section below).
+
+4. **Modular and Extensible**: The script components have been organized into modular, manageable chunks within `utils.sh`, facilitating easy updates, bug fixes, and potentially integration with additional functionalities in the future.
+
+## Use Cases
+
+### Home Servers & Streaming on [Jellyfin](https://github.com/jellyfin/jellyfin), [Emby](https://github.com/MediaBrowser/Emby) or [Plex](https://www.plex.tv/):
+- **Storage Optimization**: By converting video files to HEVC within your home server, you can dramatically decrease disk usage. This freed space enhances library capacity without sacrificing performance.
+
+### Content Creators:
+- **Space Efficiency**: Reduce storage footprint by transcoding older format videos into HEVC for your video archive. Keep high-quality content accessible while optimizing physical media.
+
+### Backup Specialists:
+- **Efficient Backups**: Optimize backup processes by minimizing space consumption for multimedia data, thanks to HEVC's superior compression efficiency.
+
+### Data Archival Professionals:
+- **Enhanced Storage Utilization**: Preserve extensive video collections on more compact media by converting them to HEVC. Maintain access while maximizing storage space.
+
+In essence, this project empowers users to transform their digital repositories into leaner, cost-effective systems without compromising the superior viewing experience HEVC is known for.
 
 ## Key Features:
 
